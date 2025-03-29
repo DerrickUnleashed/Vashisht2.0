@@ -15,7 +15,6 @@ import websocket
 from flask_socketio import SocketIO
 import torch
 
-# Initialize Flask app
 app = Flask(__name__, static_folder="../Frontend/FLOWSpeak/dist/assets", template_folder="../Frontend/FLOWSpeak/dist")
 CORS(app)  # Enable CORS for all routes
 socketio = SocketIO(app, cors_allowed_origins="*")  # Initialize SocketIO for real-time communication
@@ -720,5 +719,5 @@ def handle_streaming_audio(data):
 # ------------------------
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 6000))
     socketio.run(app, host='0.0.0.0', port=port, debug=True)

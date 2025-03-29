@@ -1,5 +1,7 @@
 from transformers import pipeline
 pipe = pipeline("fill-mask", model="./local_bert", tokenizer="./local_bert")
-sentence = "The weather is really nice"
+sentence = "the weather is"
 result = pipe(sentence + " [MASK]")
-print(f"{result[0]['token_str']}/{result[1]['token_str']}/{result[2]['token_str']}/{result[3]['token_str']}/{result[4]['token_str']}")
+for i in result:
+    if i['token_str'].isalpha():
+        print(i['token_str'])

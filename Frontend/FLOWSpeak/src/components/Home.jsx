@@ -17,24 +17,13 @@ const Home = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      
-      if (response.ok) {
-        setIsSubmitted(true);
-        setFormData({ name: '', email: '', message: '' });
-        setTimeout(() => setIsSubmitted(false), 5000);
-      }
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    }
+    const mailtoLink = `mailto:support@flowspeak.ai?subject=Contact Form Submission&body=Name: ${formData.name}%0AEmail: ${formData.email}%0AMessage: ${formData.message}`;
+    window.location.href = mailtoLink; // Open the mail client with pre-filled information
+    setIsSubmitted(true);
+    setFormData({ name: '', email: '', message: '' });
+    setTimeout(() => setIsSubmitted(false), 5000);
   };
+
 
   return (
     <div className="home-container">

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from fetcher import fetch_corrected_text
+from transformers import pipeline
 
 router = Blueprint('router', __name__)
 
@@ -7,8 +7,13 @@ router = Blueprint('router', __name__)
 def process_speech():
     data = request.get_json()
     speech = data.get('speech', '')
-    
-    # Fetch corrected text
-    corrected_text = fetch_corrected_text(speech)
-    
+    pipe = pipeline("fill-mask", model="./local_bert", tokenizer="./local_bert")
+    result = pipe(speech + " [MASK]")
+    corrected_text=''
+    for i in result:
+        if i['token_str'].isalpha():
+            corrected_text += '['
+            corrected_text += i['token_str']
+            corrected_text += ']    '
+    print(corrected_text)  # Print to terminal
     return jsonify({'corrected_text': corrected_text})

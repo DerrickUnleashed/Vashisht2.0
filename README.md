@@ -1,5 +1,5 @@
 # Vashisht2.0
 Stutter Detection 
 
-# RUNNING THE APP:
+# Running the App:
 cd frontend/FLOWSpeak && npm install && npm run dev

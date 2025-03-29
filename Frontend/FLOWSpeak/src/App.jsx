@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Home from './components/Home';
-// import StutterHelp from './components/StutterHelp'; // commented out for now
+import StutterHelp from './components/StutterHelp';
 import './App.css';
 
 const App = () => {
@@ -21,7 +21,7 @@ const App = () => {
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
-            {/* <Route path="/stutter-help" element={<StutterHelp />} /> */}
+            <Route path="/stutter-help" element={<StutterHelp />} /> 
           </Routes>
         </main>
       </div>

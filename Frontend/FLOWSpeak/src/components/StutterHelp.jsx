@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+
 import { motion } from 'framer-motion';
 import './StutterHelp.css';
 
@@ -91,9 +92,10 @@ const StutterHelp = () => {
     });
   };
 
-  const sendToBackend = async (text) => {
+const sendToBackend = async (text) => {
+    // Fetch corrected text from the backend
     try {
-      const response = await fetch('/api/process-speech', {
+      const response = await fetch('http://localhost:5500/api/process-speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +105,7 @@ const StutterHelp = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setCorrectedText(prevText => prevText + ' ' + data.corrected_text);
+        setCorrectedText(data.corrected_text); // Update corrected text from response
       }
     } catch (error) {
       console.error('Error sending to backend:', error);

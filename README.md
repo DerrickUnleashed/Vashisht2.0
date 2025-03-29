@@ -1,5 +1,5 @@
 # Vashisht2.0
-Stutter Detection 
+Develop a deep learning-based system that detects, classifies, and auto-completes stuttered speech in real-time, improving accessibility and communication.
 
 # Running the App:
 cd Frontend/FLOWSpeak && npm install && npm run dev

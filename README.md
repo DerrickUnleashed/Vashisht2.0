@@ -2,4 +2,7 @@
 Stutter Detection 
 
 # Running the App:
-cd frontend/FLOWSpeak && npm install && npm run dev
+cd Frontend/FLOWSpeak && npm install && npm run dev
+
+# Running the Backend:
+cd Backend && pip install -r requirements.txt && python app.py

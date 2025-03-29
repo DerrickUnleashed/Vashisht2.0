@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import './StutterHelp.css';
 
 const StutterHelp = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [correctedText, setCorrectedText] = useState('');
   const [recognitionActive, setRecognitionActive] = useState(false);
   const [suggestions, setSuggestions] = useState([]);

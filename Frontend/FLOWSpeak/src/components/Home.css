@@ -1,3 +1,14 @@
+.logo {
+  width: 350px; /* Adjust the size */
+  height: auto; /* Maintain aspect ratio */
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.logo:hover {
+  transform: scale(1.2) rotate(10deg); /* Smooth zoom and rotate on hover */
+  opacity: 0.8; /* Slight fade */
+}
+
 .home-container {
     width: 100%;
     overflow-x: hidden;

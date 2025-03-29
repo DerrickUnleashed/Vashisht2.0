@@ -33,6 +33,8 @@ const Home = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
+        <img src="../../public/fslogov1.png" alt="" className="logo" />
+        <br /><br /><br />
         <h1 className="title">
           <span className="highlight">FLOW</span>speak
         </h1>
@@ -203,9 +205,7 @@ const Home = () => {
         </div>
       </section>
 
-      <footer className="footer">
-        <p>&copy; {new Date().getFullYear()} FLOWspeak - All Rights Reserved</p>
-      </footer>
+      
     </div>
   );
 };

@@ -28,6 +28,9 @@ const App = () => {
             <Route path="/therapy" element={<Therapy />} /> 
           </Routes>
         </main>
+        <footer className="footer">
+        <p>&copy; {new Date().getFullYear()} FLOWspeak - All Rights Reserved</p>
+      </footer>
       </div>
     </Router>
   );

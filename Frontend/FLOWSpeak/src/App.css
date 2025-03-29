@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+.logo1 {
+  width: 50px; /* Adjust the size */
+  height: auto; /* Maintain aspect ratio */
+}
+
 body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -37,17 +42,17 @@ html {
   z-index: 100;
 }
 
-.logo {
+.logo2 {
   font-size: 1.8rem;
   font-weight: 800;
 }
 
-.logo a {
+.logo2 a {
   text-decoration: none;
   color: #4f46e5;
 }
 
-.logo span {
+.logo2 span {
   color: #333;
   font-weight: 600;
 }
@@ -98,7 +103,7 @@ main {
     padding: 1rem;
   }
   
-  .logo {
+  .logo2 {
     font-size: 1.5rem;
   }
   

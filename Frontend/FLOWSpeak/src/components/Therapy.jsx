@@ -1,19 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './Therapy.css';
 
 const Therapy = () => {
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
   const [highlightPosition, setHighlightPosition] = useState(0);
-  const [lastRecognizedIndex, setLastRecognizedIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [autoHighlightSpeed, setAutoHighlightSpeed] = useState(150); // Characters per minute
+  const [isAutoHighlighting, setIsAutoHighlighting] = useState(false);
   const [currentText, setCurrentText] = useState(
     "Hello, fellow stutterers, my name is Max Wolens, I'm 29 years old, and I've stuttered since I was 2 years old. After I graduated from college, I started a career in technology, where I was often required to make presentations for my job. I had made presentations in college, but never professionally. I realized quickly that I wasn't able to maintain presentations on Zoom, as I experienced a ton of blocks, and I was truly experiencing cognitive overload — I wasn't able to simultaneously produce fluent speech while coming up with a dialogue that sounded intelligent and coherent."
   );
 
-  // Refs
+  // Refs for DOM elements and objects
   const recognitionRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const timerRef = useRef(null);
@@ -23,13 +23,48 @@ const Therapy = () => {
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const autoHighlightTimerRef = useRef(null);
+  
+  // Performance optimization refs
+  const lastRecognizedIndexRef = useRef(0);
+  const currentTranscriptRef = useRef('');
+  const processingTimeoutRef = useRef(null);
+  const textLowerCaseRef = useRef(currentText.toLowerCase());
+  const wordsArrayRef = useRef(currentText.toLowerCase().split(/\s+/));
+
+  // Precompute text data on init or when text changes
+  useEffect(() => {
+    textLowerCaseRef.current = currentText.toLowerCase();
+    wordsArrayRef.current = currentText.toLowerCase().split(/\s+/);
+  }, [currentText]);
+
+  // Initialize canvas for wave visualization
+  const initializeCanvas = useCallback(() => {
+    if (!canvasRef.current || !wavesCanvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const wavesCanvas = wavesCanvasRef.current;
+    
+    // Main circular visualizer
+    canvas.width = 80;
+    canvas.height = 80;
+    
+    // Background waves
+    wavesCanvas.width = window.innerWidth;
+    wavesCanvas.height = 150;
+  }, []);
 
   // Initialize speech recognition and audio visualization
   useEffect(() => {
-    // Initialize canvas for wave visualization
-    if (canvasRef.current && wavesCanvasRef.current) {
-      initializeCanvas();
-    }
+    initializeCanvas();
+    
+    const handleResize = () => {
+      if (wavesCanvasRef.current) {
+        wavesCanvasRef.current.width = window.innerWidth;
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
 
     // Setup speech recognition
     if ('webkitSpeechRecognition' in window) {
@@ -38,23 +73,11 @@ const Therapy = () => {
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       
-      recognitionRef.current.onresult = (event) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-            compareWithText(finalTranscript);
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-        
-        const displayText = finalTranscript || interimTranscript;
-        setTranscript(displayText);
-      };
+      // Use higher settings for more real-time response
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.maxAlternatives = 1;
+      
+      recognitionRef.current.onresult = handleSpeechResult;
       
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error', event.error);
@@ -66,8 +89,9 @@ const Therapy = () => {
       alert('Your browser does not support the Web Speech API. Please try Chrome or Edge.');
     }
 
-    // Cleanup function
     return () => {
+      window.removeEventListener('resize', handleResize);
+      
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
@@ -83,106 +107,177 @@ const Therapy = () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-    };
-  }, []);
-
-  const initializeCanvas = () => {
-    const canvas = canvasRef.current;
-    const wavesCanvas = wavesCanvasRef.current;
-    
-    // Main circular visualizer
-    canvas.width = 80;
-    canvas.height = 80;
-    
-    // Background waves
-    wavesCanvas.width = window.innerWidth;
-    wavesCanvas.height = 150;
-    
-    window.addEventListener('resize', () => {
-      wavesCanvas.width = window.innerWidth;
-    });
-  };
-
-  // Compare spoken text with the displayed text to update highlight position
-  const compareWithText = (spokenText) => {
-    if (!spokenText) return;
-    
-    const cleanSpokenText = spokenText.toLowerCase().trim();
-    const textLower = currentText.toLowerCase();
-    
-    // Extract the last few words for more accurate matching
-    const words = cleanSpokenText.split(/\s+/);
-    
-    // Get a phrase of the last few words (more reliable for matching)
-    const lastFewWords = words.slice(-Math.min(5, words.length)).join(' ');
-    
-    if (lastFewWords.length < 3) return; // Skip very short phrases
-    
-    // Find this phrase in the text, starting from the last position
-    // We'll use a sliding window approach if exact match fails
-    let matchPosition = -1;
-    let searchStartPos = Math.max(0, lastRecognizedIndex - 20); // Start a bit before last match
-    
-    // Try exact match first
-    matchPosition = textLower.indexOf(lastFewWords, searchStartPos);
-    
-    // If exact match fails, try matching individual words
-    if (matchPosition === -1) {
-      // Try each word in the last few words
-      for (let i = words.length - 1; i >= Math.max(0, words.length - 5); i--) {
-        const word = words[i];
-        if (word.length < 3) continue; // Skip very short words
-        
-        const wordPos = textLower.indexOf(word, searchStartPos);
-        if (wordPos !== -1) {
-          // Found a match for this word
-          matchPosition = wordPos + word.length;
-          break;
-        }
+      
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
       }
-    } else {
-      // Found exact match for the phrase
-      matchPosition = matchPosition + lastFewWords.length;
+      
+      if (autoHighlightTimerRef.current) {
+        clearInterval(autoHighlightTimerRef.current);
+      }
+    };
+  }, [initializeCanvas]);
+
+  // Auto-highlight effect
+  useEffect(() => {
+    if (isAutoHighlighting) {
+      // Clear any existing timer
+      if (autoHighlightTimerRef.current) {
+        clearInterval(autoHighlightTimerRef.current);
+      }
+      
+      // Calculate interval based on speed (characters per minute)
+      // Convert to milliseconds per character
+      const msPerChar = 60000 / autoHighlightSpeed;
+      
+      autoHighlightTimerRef.current = setInterval(() => {
+        setHighlightPosition(prev => {
+          const newPosition = prev + 1;
+          
+          // If we've reached the end, reset or stop
+          if (newPosition >= currentText.length) {
+            // Optional: reset to beginning
+            // return 0;
+            
+            // Or stop auto-highlighting
+            setIsAutoHighlighting(false);
+            return prev;
+          }
+          
+          scrollToHighlight(newPosition);
+          return newPosition;
+        });
+      }, msPerChar);
+      
+      return () => {
+        if (autoHighlightTimerRef.current) {
+          clearInterval(autoHighlightTimerRef.current);
+        }
+      };
+    }
+  }, [isAutoHighlighting, autoHighlightSpeed, currentText]);
+
+  // Handle speech recognition results with optimized performance
+  const handleSpeechResult = (event) => {
+    // Skip processing if we have a pending timeout (debounce)
+    if (processingTimeoutRef.current) {
+      clearTimeout(processingTimeoutRef.current);
     }
     
-    // Update highlight position if we found a match
-    if (matchPosition !== -1 && matchPosition > lastRecognizedIndex) {
-      setHighlightPosition(matchPosition);
-      setLastRecognizedIndex(matchPosition);
+    let interimTranscript = '';
+    let finalTranscript = currentTranscriptRef.current;
+    
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += ' ' + transcript;
+        // Process final results immediately for better responsiveness
+        processTranscript(finalTranscript);
+      } else {
+        interimTranscript += transcript;
+        // Process interim results with a very short delay to reduce processing load
+        processingTimeoutRef.current = setTimeout(() => {
+          processTranscript(finalTranscript + ' ' + interimTranscript);
+        }, 50);
+      }
+    }
+    
+    currentTranscriptRef.current = finalTranscript;
+  };
+
+  // Process the transcript with optimized matching algorithm
+  const processTranscript = (transcript) => {
+    if (!transcript || transcript.trim() === '') return;
+    
+    const cleanTranscript = transcript.toLowerCase().trim();
+    const words = cleanTranscript.split(/\s+/);
+    
+    // Fast processing - use the last few words
+    const lastFewWordsCount = Math.min(5, words.length);
+    const startIndex = Math.max(0, words.length - lastFewWordsCount);
+    const lastFewWords = words.slice(startIndex);
+    
+    // Use a faster match method for short phrases
+    findAndHighlightMatch(lastFewWords);
+  };
+
+  // Optimized matching algorithm
+  const findAndHighlightMatch = (searchWords) => {
+    if (!searchWords || searchWords.length === 0) return;
+    
+    const textLower = textLowerCaseRef.current;
+    const allWords = wordsArrayRef.current;
+    
+    // Start searching from the last recognized position
+    const startPosition = Math.max(0, lastRecognizedIndexRef.current);
+    
+    // Try to find exact matches for the last spoken word
+    const lastWord = searchWords[searchWords.length - 1];
+    
+    // Skip very short words (less likely to be unique)
+    if (lastWord && lastWord.length >= 3) {
+      // Look for the word after our current position
+      let wordIndex = -1;
+      let bestMatchPos = -1;
       
-      // Scroll the text container to show the current position
-      scrollToHighlight(matchPosition);
+      // Find all occurrences of the word
+      let searchPos = startPosition;
+      while ((searchPos = textLower.indexOf(lastWord, searchPos)) !== -1) {
+        // Check if this is a full word match (not part of another word)
+        const isWordBoundaryBefore = searchPos === 0 || !textLower[searchPos - 1].match(/[a-z0-9]/i);
+        const isWordBoundaryAfter = searchPos + lastWord.length >= textLower.length || 
+                                     !textLower[searchPos + lastWord.length].match(/[a-z0-9]/i);
+                                     
+        if (isWordBoundaryBefore && isWordBoundaryAfter) {
+          // This is a legitimate word boundary match
+          if (searchPos > startPosition) {
+            bestMatchPos = searchPos + lastWord.length;
+            break; // Take the first match after our current position
+          }
+        }
+        searchPos += lastWord.length;
+      }
+      
+      // If we found a match
+      if (bestMatchPos !== -1) {
+        lastRecognizedIndexRef.current = bestMatchPos;
+        setHighlightPosition(bestMatchPos);
+        scrollToHighlight(bestMatchPos);
+      }
     }
   };
   
-  // Auto-scroll to keep the highlight visible
+  // Faster scroll implementation
   const scrollToHighlight = (position) => {
     if (!textContainerRef.current) return;
     
-    // Calculate the position as a percentage of total text length
-    const scrollPercentage = position / currentText.length;
-    
-    // Apply scroll based on percentage
+    // Skip animation for faster response
     const container = textContainerRef.current;
-    const scrollTarget = Math.max(
-      0, 
-      (scrollPercentage * container.scrollHeight) - (container.clientHeight / 2)
-    );
     
-    // Smooth scroll to the position
-    container.scrollTo({
-      top: scrollTarget,
-      behavior: 'smooth'
-    });
+    // Calculate approximation of where this text position would be
+    const textLength = currentText.length;
+    const containerHeight = container.scrollHeight;
+    const approximatePosition = (position / textLength) * containerHeight;
+    
+    // Center the position in the viewport
+    const scrollPosition = Math.max(0, approximatePosition - (container.clientHeight / 2));
+    
+    // Use scrollTo without smooth behavior for immediate response
+    container.scrollTop = scrollPosition;
   };
 
   const toggleRecording = async () => {
+    // If auto-highlighting is on, turn it off when recording starts
+    if (isAutoHighlighting) {
+      setIsAutoHighlighting(false);
+    }
+    
     if (!isRecording) {
       try {
         // Reset position when starting a new recording
         setHighlightPosition(0);
-        setLastRecognizedIndex(0);
-        setTranscript('');
+        lastRecognizedIndexRef.current = 0;
+        currentTranscriptRef.current = '';
         setCurrentTime(0);
         setTotalTime(0);
         
@@ -195,7 +290,13 @@ const Therapy = () => {
         }, 1000);
         
         // Start audio stream
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: { 
+            echoCancellation: true,
+            noiseSuppression: true,
+            sampleRate: 16000
+          } 
+        });
         mediaStreamRef.current = stream;
         
         // Setup audio context
@@ -237,8 +338,33 @@ const Therapy = () => {
         clearInterval(timerRef.current);
       }
       
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+      
       setIsRecording(false);
     }
+  };
+
+  const toggleAutoHighlight = () => {
+    // If recording is on, turn it off when auto-highlighting starts
+    if (isRecording) {
+      toggleRecording();
+    }
+    
+    setIsAutoHighlighting(prev => !prev);
+    
+    // Reset position when starting auto-highlighting
+    if (!isAutoHighlighting) {
+      setHighlightPosition(0);
+    }
+  };
+
+  const changeAutoHighlightSpeed = (change) => {
+    setAutoHighlightSpeed(prev => {
+      const newSpeed = Math.max(50, Math.min(500, prev + change));
+      return newSpeed;
+    });
   };
 
   const startVisualization = () => {
@@ -309,17 +435,21 @@ const Therapy = () => {
       const alpha = 0.3 - waveIndex * 0.1;
       const amplitudeFactor = 1 - waveIndex * 0.2;
       
-      // Calculate average of frequency data for amplitude
+      // Calculate average of frequency data for amplitude (optimized)
       let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
+      const sampleSize = Math.min(dataArray.length, 32); // Sample fewer data points for performance
+      for (let i = 0; i < sampleSize; i++) {
+        sum += dataArray[i * Math.floor(dataArray.length / sampleSize)];
       }
-      const averageAmplitude = sum / dataArray.length;
+      const averageAmplitude = sum / sampleSize;
       const dynamicAmplitude = Math.max(5, averageAmplitude * 0.5 * amplitudeFactor);
       
       ctx.moveTo(0, height / 2);
       
-      for (let x = 0; x < width; x += 5) {
+      // Optimize wave drawing - use fewer points for better performance
+      const step = Math.max(5, Math.floor(width / 120)); // Adaptive step size based on screen width
+      
+      for (let x = 0; x < width; x += step) {
         // Multiple sine waves with different frequencies
         const y = Math.sin(x * 0.01 + time * (waveIndex + 1) * 0.5) * dynamicAmplitude + 
                  Math.sin(x * 0.02 - time * (waveIndex + 1) * 0.7) * dynamicAmplitude * 0.5 +
@@ -356,8 +486,8 @@ const Therapy = () => {
     setPlaybackSpeed(speeds[nextIndex]);
   };
 
-  // Render the text with highlighted portion
-  const renderTextWithHighlight = () => {
+  // Memoize text rendering to avoid unnecessary re-renders
+  const renderTextWithHighlight = useCallback(() => {
     if (!currentText) return null;
     
     const beforeHighlight = currentText.substring(0, highlightPosition);
@@ -371,7 +501,7 @@ const Therapy = () => {
         </p>
       </div>
     );
-  };
+  }, [currentText, highlightPosition]);
 
   return (
     <div className="Therapy-container">
@@ -389,6 +519,40 @@ const Therapy = () => {
         {/* Text display */}
         <div className="text-display">
           {renderTextWithHighlight()}
+        </div>
+      </div>
+      
+      {/* Auto-highlight speed controls */}
+      <div className="auto-highlight-controls">
+        <div className="speed-display">
+          <span>Auto-Highlight Speed: {autoHighlightSpeed} CPM</span>
+        </div>
+        <div className="speed-buttons">
+          <button 
+            className="speed-btn" 
+            onClick={() => changeAutoHighlightSpeed(-25)}
+            disabled={autoHighlightSpeed <= 50}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <button 
+            className={`auto-highlight-btn ${isAutoHighlighting ? 'active' : ''}`} 
+            onClick={toggleAutoHighlight}
+          >
+            {isAutoHighlighting ? 'Pause' : 'Auto-Highlight'}
+          </button>
+          <button 
+            className="speed-btn" 
+            onClick={() => changeAutoHighlightSpeed(25)}
+            disabled={autoHighlightSpeed >= 500}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
       
@@ -424,6 +588,80 @@ const Therapy = () => {
           </button>
         </div>
       </div>
+      
+      {/* Add CSS for new controls */}
+      <style>{`
+        .auto-highlight-controls {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          margin-bottom: 20px;
+          background: rgba(124, 58, 237, 0.1);
+          padding: 12px;
+          border-radius: 12px;
+          width: 90%;
+          max-width: 500px;
+          margin: 0 auto 20px;
+        }
+        
+        .speed-display {
+          font-size: 14px;
+          margin-bottom: 8px;
+          color: #7c3aed;
+        }
+        
+        .speed-buttons {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        
+        .speed-btn {
+          background: rgba(124, 58, 237, 0.2);
+          border: none;
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: #7c3aed;
+          transition: all 0.2s;
+        }
+        
+        .speed-btn:hover {
+          background: rgba(124, 58, 237, 0.3);
+        }
+        
+        .speed-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        
+        .auto-highlight-btn {
+          background: #7c3aed;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .auto-highlight-btn:hover {
+          background: #6d28d9;
+        }
+        
+        .auto-highlight-btn.active {
+          background: #ef4444;
+        }
+        
+        .auto-highlight-btn.active:hover {
+          background: #dc2626;
+        }
+      `}</style>
     </div>
   );
 };

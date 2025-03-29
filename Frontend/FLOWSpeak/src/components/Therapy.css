@@ -1,0 +1,237 @@
+/* Therapy.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-color: #6d28d9; /* Main purple */
+  --primary-light: #8b5cf6; /* Lighter purple */
+  --primary-dark: #5b21b6; /* Darker purple */
+  --text-color: #1f2937;
+  --bg-color: #f9fafb;
+  --highlight-color: #8b5cf6;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.Therapy-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Wave canvas */
+.waves-canvas {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 150px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Header styles */
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding-top: 20px;
+}
+
+.app-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+}
+
+.app-subtitle {
+  font-size: 1.2rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Main content */
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 30px;
+}
+
+/* Text display */
+.text-display {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  max-height: 60vh;
+}
+
+.text-container {
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.text-container p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--text-color);
+}
+
+.spoken-text {
+  color: var(--primary-color);
+  font-weight: 500;
+  /* Smooth transition for highlighting */
+  transition: color 0.3s ease;
+}
+
+.unspoken-text {
+  color: rgba(31, 41, 55, 0.8);
+  /* Smooth transition for highlighting */
+  transition: color 0.3s ease;
+}
+
+/* Add visual cue for current position */
+.spoken-text::after {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 1.1em;
+  background-color: var(--primary-color);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Controls section */
+.controls {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.time-display {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 15px;
+}
+
+.control-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.control-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+.control-btn:hover {
+  color: var(--primary-color);
+}
+
+.record-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  position: relative;
+}
+
+.record-btn:hover {
+  background-color: var(--primary-dark);
+  color: white;
+}
+
+.visualizer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.control-icon {
+  position: relative;
+  z-index: 2;
+}
+
+.speed-btn {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.speed-btn:hover {
+  color: var(--primary-color);
+}
+
+.volume-btn svg {
+  stroke: currentColor;
+}
+
+/* Scrollbar styling */
+.text-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.text-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.text-container::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+}
+
+.text-container::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-title {
+    font-size: 2.5rem;
+  }
+  
+  .app-subtitle {
+    font-size: 1rem;
+  }
+  
+  .text-container p {
+    font-size: 1rem;
+  }
+}

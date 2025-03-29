@@ -8,12 +8,21 @@ body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  width: 100%; /* Ensure body takes full height */
+  justify-content: center;
+  background-color: azure;
+}
+
+html {
+  width: 100%; /* Ensure html takes full height */
 }
 
 .app {
   min-height: 100vh;
   display: flex;
+  width: 100%;
   flex-direction: column;
+  margin: 0 auto;
 }
 
 .navbar {
@@ -78,6 +87,10 @@ body {
 
 main {
   flex: 1;
+  width: 100%;
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
 }
 
 @media (max-width: 768px) {

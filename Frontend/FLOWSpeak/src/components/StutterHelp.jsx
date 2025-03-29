@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-
 import { motion } from 'framer-motion';
 import './StutterHelp.css';
 
@@ -8,6 +7,11 @@ const StutterHelp = () => {
   const [transcribedText, setTranscribedText] = useState('');
   const [correctedText, setCorrectedText] = useState('');
   const [recognitionActive, setRecognitionActive] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [combinations, setCombinations] = useState({});
+  // New state to track added words
+  const [addedWords, setAddedWords] = useState({});
+  
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const mediaStreamRef = useRef(null);
@@ -41,6 +45,8 @@ const StutterHelp = () => {
         
         const displayText = finalTranscript || interimTranscript;
         setTranscribedText(displayText);
+        // Reset added words when transcribed text changes
+        setAddedWords({});
       };
       
       recognitionRef.current.onerror = (event) => {
@@ -92,7 +98,7 @@ const StutterHelp = () => {
     });
   };
 
-const sendToBackend = async (text) => {
+  const sendToBackend = async (text) => {
     // Fetch corrected text from the backend
     try {
       const response = await fetch('http://localhost:5500/api/process-speech', {
@@ -105,7 +111,8 @@ const sendToBackend = async (text) => {
       
       if (response.ok) {
         const data = await response.json();
-        setCorrectedText(data.corrected_text); // Update corrected text from response
+        setSuggestions(data.top1_words);
+        setCombinations(data.combinations);
       }
     } catch (error) {
       console.error('Error sending to backend:', error);
@@ -264,6 +271,60 @@ const sendToBackend = async (text) => {
     }
   };
 
+  // New function to handle word toggling
+  const toggleWord = (word) => {
+    // Check if word has been added before
+    const isAdded = addedWords[word];
+    
+    if (isAdded) {
+      // Remove the word
+      const regex = new RegExp(`\\s${word}\\b`, 'g');
+      setTranscribedText(prev => prev.replace(regex, ''));
+      
+      // Update added words state
+      setAddedWords(prev => ({
+        ...prev,
+        [word]: false
+      }));
+    } else {
+      // Add the word
+      setTranscribedText(prev => `${prev} ${word}`);
+      
+      // Update added words state
+      setAddedWords(prev => ({
+        ...prev,
+        [word]: true
+      }));
+    }
+  };
+
+  // Similar function for word combinations
+  const toggleCombination = (prefix, word) => {
+    const combination = `${prefix} ${word}`;
+    const isAdded = addedWords[combination];
+    
+    if (isAdded) {
+      // Remove the combination
+      const regex = new RegExp(`\\s${prefix}\\s${word}\\b`, 'g');
+      setTranscribedText(prev => prev.replace(regex, ''));
+      
+      // Update added words state
+      setAddedWords(prev => ({
+        ...prev,
+        [combination]: false
+      }));
+    } else {
+      // Add the combination
+      setTranscribedText(prev => `${prev} ${combination}`);
+      
+      // Update added words state
+      setAddedWords(prev => ({
+        ...prev,
+        [combination]: true
+      }));
+    }
+  };
+
   return (
     <div className="stutter-help-container">
       <motion.div 
@@ -321,11 +382,55 @@ const sendToBackend = async (text) => {
         </div>
         
         <div className="correction-box">
-          <h3>Stutter Correction</h3>
-          <div className="text-display">
-            {correctedText || (
-              <span className="placeholder-text">Corrected speech will appear here...</span>
-            )}
+          <h3>Suggested Words</h3>
+          <div className="button-display flex flex-wrap gap-2">
+            {suggestions.length > 0 ? 
+              suggestions.map((word, index) => (
+                <button 
+                  key={index} 
+                  className={`suggested-word-button px-3 py-1 rounded transition-colors ${
+                    addedWords[word] 
+                      ? 'bg-blue-400 hover:bg-blue-500' 
+                      : 'bg-blue-100 hover:bg-blue-200'
+                  }`}
+                  onClick={() => toggleWord(word)}
+                >
+                  {word}
+                </button>
+              )) : 
+              <span className="placeholder-text text-gray-500">No suggestions yet...</span>
+            }
+          </div>
+          
+          <div className="word-combinations-container">
+            <h3 className="text-xl font-bold text-purple-700 mb-3">Word Combinations</h3>
+            
+            <div className="button-display">
+              {Object.keys(combinations).length > 0 ? (
+                Object.entries(combinations).map(([prefix, words]) => (
+                  <div key={prefix} className="combo-group">
+                    {words.map((word) => {
+                      const combination = `${prefix} ${word}`;
+                      return (
+                        <button
+                          key={`${prefix}-${word}`}
+                          className={`suggested-word-button ${
+                            addedWords[combination] 
+                              ? 'bg-purple-400 hover:bg-purple-500' 
+                              : 'bg-purple-100 hover:bg-purple-200'
+                          }`}
+                          onClick={() => toggleCombination(prefix, word)}
+                        >
+                          {prefix} {word}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))
+              ) : (
+                <span className="placeholder-text text-gray-500">No word combinations yet...</span>
+              )}
+            </div>
           </div>
         </div>
       </motion.div>
@@ -342,6 +447,7 @@ const sendToBackend = async (text) => {
             <li>Position yourself close to your microphone</li>
             <li>Speak at a natural pace</li>
             <li>Try using the suggested corrections in your next practice session</li>
+            <li>Click a suggestion once to add it, click again to remove it</li>
           </ul>
         </div>
       </div>

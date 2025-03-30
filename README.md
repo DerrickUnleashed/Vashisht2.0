@@ -1,5 +1,30 @@
 # Vashisht2.0
-Develop a deep learning-based system that detects, classifies, and auto-completes stuttered speech in real-time, improving accessibility and communication.
+# Problem Statement
+Develop a deep learning-based and NLP system that detects, classifies, and auto-completes stuttered speech in real-time, improving accessibility and communication.
+# Team Members:
+Raghavan R
+Derrick Richard
+Tarun Srikumar
+Sreenidhi K
+
+# Solution Overview:
+This ReactJS application leverages deep learning and NLP models to assist individuals with stuttering. It comprises three core modules:
+
+## Stutter Detection & Classification:
+
+Utilizes a pre-trained deep learning model (Wave2vec) to analyze audio input and classify different types of stutters (e.g., repetitions, prolongations, and blocks).
+
+Provides real-time feedback to users with visual and audio indicators.
+
+## Stutter Correction/Aide with BERT:
+
+Incorporates a fine-tuned BERT model to suggest corrections and alternatives for detected stuttered speech.
+
+Generates context-aware suggestions to guide users in improving speech fluency.
+
+## Speech Therapy Component:
+
+Interactive speech therapy exercises with configuration options to modify pacing according to the user's stutter profile.
 
 # Running the App:
 cd Frontend/FLOWSpeak && npm install && npm run dev

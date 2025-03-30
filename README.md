@@ -8,11 +8,11 @@ cd Frontend/FLOWSpeak && npm install && npm run dev
 cd Backend && pip install -r requirements.txt && python setup.py && python server.py
 
 # For the Demo Video Click Below:
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=LUXPLMexKSI
+<p align="center"><a href="http://www.youtube.com/watch?feature=player_embedded&v=LUXPLMexKSI
 " target="_blank"><img src="http://img.youtube.com/vi/LUXPLMexKSI/0.jpg" 
-alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
+alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a></p>
 
 # For the Setup Click Below:
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=mrcyOX2VKk4
+<p align="center"><a href="http://www.youtube.com/watch?feature=player_embedded&v=mrcyOX2VKk4
 " target="_blank"><img src="http://img.youtube.com/vi/mrcyOX2VKk4/0.jpg" 
-alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
+alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a></p>

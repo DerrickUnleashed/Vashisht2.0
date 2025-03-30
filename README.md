@@ -41,3 +41,8 @@ alt="IMAGE ALT TEXT HERE" width="500" height="400" border="10" /></a></p>
 <p align="center"><a href="http://www.youtube.com/watch?feature=player_embedded&v=mrcyOX2VKk4
 " target="_blank"><img src="http://img.youtube.com/vi/mrcyOX2VKk4/0.jpg" 
 alt="IMAGE ALT TEXT HERE" width="500" height="400" border="10" /></a></p>
+
+## Real World Applications
+### Upon implementing Text To Speech, you may implement the stutter correction component to be used in online meetings for people with stuttering (block) problems , to automatically aide them
+### Practice speaking using speech therapy component before any important speeches for people with stuttering (repetition) problems
+### We would also love to take inputs from people with ideas on how to help people who have stuttering issues through the contact form.

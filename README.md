@@ -10,9 +10,9 @@ cd Backend && pip install -r requirements.txt && python setup.py && python serve
 # For the Demo Video Click Below:
 <p align="center"><a href="http://www.youtube.com/watch?feature=player_embedded&v=LUXPLMexKSI
 " target="_blank"><img src="http://img.youtube.com/vi/LUXPLMexKSI/0.jpg" 
-alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a></p>
+alt="IMAGE ALT TEXT HERE" width="500" height="400" border="10" /></a></p>
 
 # For the Setup Click Below:
 <p align="center"><a href="http://www.youtube.com/watch?feature=player_embedded&v=mrcyOX2VKk4
 " target="_blank"><img src="http://img.youtube.com/vi/mrcyOX2VKk4/0.jpg" 
-alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a></p>
+alt="IMAGE ALT TEXT HERE" width="500" height="400" border="10" /></a></p>

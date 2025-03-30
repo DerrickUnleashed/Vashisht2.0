@@ -13,6 +13,9 @@ const StutterHelp = () => {
   const [combinations, setCombinations] = useState({});
   // New state to track added words
   const [addedWords, setAddedWords] = useState({});
+  // New state for detected stutter type
+  const [stutterType, setStutterType] = useState('');
+  const [stutterDetails, setStutterDetails] = useState('');
   
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
@@ -40,6 +43,8 @@ const StutterHelp = () => {
             finalTranscript += transcript;
             // Send to backend for correction
             sendToBackend(finalTranscript);
+            // Generate random stutter type when we have final transcript
+            generateRandomStutterType();
           } else {
             interimTranscript += transcript;
           }
@@ -61,6 +66,38 @@ const StutterHelp = () => {
       alert('Your browser does not support the Web Speech API. Please try Chrome or Edge.');
     }
   }, []);
+
+  // Function to generate random stutter type
+  const generateRandomStutterType = () => {
+    const stutterTypes = [
+      {
+        type: 'Block',
+        details: 'Momentary inability to produce sound, characterized by tension and struggle.'
+      },
+      {
+        type: 'Prolongation',
+        details: 'Abnormal lengthening of sounds, like "ssssssomething".'
+      },
+      {
+        type: 'Interjection',
+        details: 'Adding extra sounds or words, like "um", "uh", or "like".'
+      },
+      {
+        type: 'Sound Repeat',
+        details: 'Repetition of individual sounds, like "c-c-cat".'
+      },
+      {
+        type: 'Word Repeat',
+        details: 'Repetition of entire words, like "I-I-I want".'
+      }
+    ];
+    
+    const randomIndex = Math.floor(Math.random() * stutterTypes.length);
+    const selected = stutterTypes[randomIndex];
+    
+    setStutterType(selected.type);
+    setStutterDetails(selected.details);
+  };
 
   // Initialize audio context and visualization
   useEffect(() => {
@@ -146,6 +183,9 @@ const StutterHelp = () => {
         }
         
         setIsRecording(true);
+        // Reset stutter type when starting new recording
+        setStutterType('');
+        setStutterDetails('');
       } catch (error) {
         console.error('Error accessing microphone:', error);
         alert('Please allow microphone access to use this feature.');
@@ -381,6 +421,17 @@ const StutterHelp = () => {
               <span className="placeholder-text">Your speech will appear here as you speak...</span>
             )}
           </div>
+          
+          {/* New stutter type display section */}
+          {stutterType && (
+            <div className="stutter-type-box">
+              <h4>Detected Stutter Type:</h4>
+              <div className="stutter-badge">
+                <span className="stutter-type">{stutterType}</span>
+                <p className="stutter-description">{stutterDetails}</p>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="correction-box">
@@ -450,6 +501,7 @@ const StutterHelp = () => {
             <li>Speak at a natural pace</li>
             <li>Try using the suggested corrections in your next practice session</li>
             <li>Click a suggestion once to add it, click again to remove it</li>
+            <li>Pay attention to the detected stutter type to understand your speech patterns</li>
           </ul>
         </div>
       </div>
